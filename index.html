@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Virtual Rosary - The Catholic Crusade</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+
+        .mystery-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .mystery-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .mystery-btn:hover, .mystery-btn.active {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .rosary-visual {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 30px 0;
+        }
+
+        .cross {
+            width: 40px;
+            height: 50px;
+            background: #8B4513;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            clip-path: polygon(40% 0%, 60% 0%, 60% 35%, 85% 35%, 85% 55%, 60% 55%, 60% 100%, 40% 100%, 40% 55%, 15% 55%, 15% 35%, 40% 35%);
+        }
+
+        .cross:hover {
+            background: #A0522D;
+            transform: scale(1.1);
+        }
+
+        .cross.active {
+            background: #FFD700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+        }
+
+        .chain {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .bead {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4a4a4a;
+            border: 2px solid #2a2a2a;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .bead:hover {
+            transform: scale(1.2);
+        }
+
+        .bead.large {
+            width: 26px;
+            height: 26px;
+            background: #2a2a2a;
+        }
+
+        .bead.active {
+            background: #32CD32;
+            border-color: #228B22;
+            box-shadow: 0 0 15px rgba(50, 205, 50, 0.8);
+            animation: pulse 1.5s infinite;
+        }
+
+        .bead.completed {
+            background: #FFD700;
+            border-color: #FFA500;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 15px rgba(50, 205, 50, 0.8); }
+            50% { box-shadow: 0 0 25px rgba(50, 205, 50, 1); }
+            100% { box-shadow: 0 0 15px rgba(50, 205, 50, 0.8); }
+        }
+
+        .decade {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .decade-title {
+            background: #34495e;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .decade-title:hover {
+            background: #2c3e50;
+            transform: translateY(-2px);
+        }
+
+        .decade-beads {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            right: 20px;
+            top: 15px;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .prayer-title {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .prayer-text {
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: #333;
+            text-align: justify;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .progress {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.2em;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        .instructions {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .decade-beads {
+                gap: 8px;
+            }
+            
+            .bead {
+                width: 18px;
+                height: 18px;
+            }
+            
+            .bead.large {
+                width: 22px;
+                height: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Interactive Virtual Rosary</h1>
+            <p>The Catholic Crusade</p>
+        </div>
+
+        <div class="instructions">
+            Click on the beads as you pray. Click on Mystery titles to reflect on each mystery.<br>
+            <strong>Today's Mysteries:</strong> <span id="todays-mysteries"></span>
+        </div>
+
+        <div class="mystery-selector">
+            <button class="mystery-btn" data-mystery="joyful">Joyful</button>
+            <button class="mystery-btn" data-mystery="sorrowful">Sorrowful</button>
+            <button class="mystery-btn" data-mystery="glorious">Glorious</button>
+            <button class="mystery-btn" data-mystery="luminous">Luminous</button>
+        </div>
+
+        <div class="rosary-visual">
+            <!-- Cross -->
+            <div class="cross" data-prayer="sign-of-cross" data-order="0"></div>
+
+            <!-- Introductory Chain -->
+            <div class="chain">
+                <div class="bead large" data-prayer="apostles-creed" data-order="1"></div>
+                <div class="bead large" data-prayer="our-father" data-order="2"></div>
+                <div class="bead" data-prayer="hail-mary" data-order="3"></div>
+                <div class="bead" data-prayer="hail-mary" data-order="4"></div>
+                <div class="bead" data-prayer="hail-mary" data-order="5"></div>
+                <div class="bead large" data-prayer="glory-be" data-order="6"></div>
+            </div>
+
+            <!-- Five Decades -->
+            <div class="decade">
+                <div class="decade-title" data-mystery="1">1st Mystery</div>
+                <div class="decade-beads">
+                    <div class="bead large" data-prayer="our-father" data-order="7"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="8"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="9"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="10"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="11"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="12"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="13"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="14"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="15"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="16"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="17"></div>
+                    <div class="bead large" data-prayer="glory-be" data-order="18"></div>
+                    <div class="bead" data-prayer="fatima" data-order="19"></div>
+                </div>
+            </div>
+
+            <div class="decade">
+                <div class="decade-title" data-mystery="2">2nd Mystery</div>
+                <div class="decade-beads">
+                    <div class="bead large" data-prayer="our-father" data-order="20"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="21"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="22"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="23"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="24"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="25"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="26"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="27"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="28"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="29"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="30"></div>
+                    <div class="bead large" data-prayer="glory-be" data-order="31"></div>
+                    <div class="bead" data-prayer="fatima" data-order="32"></div>
+                </div>
+            </div>
+
+            <div class="decade">
+                <div class="decade-title" data-mystery="3">3rd Mystery</div>
+                <div class="decade-beads">
+                    <div class="bead large" data-prayer="our-father" data-order="33"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="34"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="35"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="36"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="37"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="38"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="39"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="40"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="41"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="42"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="43"></div>
+                    <div class="bead large" data-prayer="glory-be" data-order="44"></div>
+                    <div class="bead" data-prayer="fatima" data-order="45"></div>
+                </div>
+            </div>
+
+            <div class="decade">
+                <div class="decade-title" data-mystery="4">4th Mystery</div>
+                <div class="decade-beads">
+                    <div class="bead large" data-prayer="our-father" data-order="46"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="47"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="48"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="49"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="50"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="51"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="52"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="53"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="54"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="55"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="56"></div>
+                    <div class="bead large" data-prayer="glory-be" data-order="57"></div>
+                    <div class="bead" data-prayer="fatima" data-order="58"></div>
+                </div>
+            </div>
+
+            <div class="decade">
+                <div class="decade-title" data-mystery="5">5th Mystery</div>
+                <div class="decade-beads">
+                    <div class="bead large" data-prayer="our-father" data-order="59"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="60"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="61"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="62"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="63"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="64"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="65"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="66"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="67"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="68"></div>
+                    <div class="bead" data-prayer="hail-mary" data-order="69"></div>
+                    <div class="bead large" data-prayer="glory-be" data-order="70"></div>
+                    <div class="bead" data-prayer="fatima" data-order="71"></div>
+                </div>
+            </div>
+
+            <!-- Concluding Prayers -->
+            <div class="chain">
+                <div class="bead large" data-prayer="hail-holy-queen" data-order="72"></div>
+                <div class="bead large" data-prayer="concluding" data-order="73"></div>
+            </div>
+        </div>
+
+        <div class="progress">
+            <span id="progress-text">Click the Cross to begin</span>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="resetRosary()">Reset</button>
+            <button class="btn" onclick="previousBead()">Previous</button>
+            <button class="btn" onclick="nextBead()">Next</button>
+            <button class="btn" onclick="autoMode()">Auto Mode</button>
+        </div>
+    </div>
+
+    <!-- Prayer Modal -->
+    <div id="prayerModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 class="prayer-title" id="modalTitle"></h2>
+            <div class="prayer-text" id="modalText"></div>
+        </div>
+    </div>
+
+    <script>
+        const prayers = {
+            'sign-of-cross': {
+                title: 'Sign of the Cross',
+                text: 'In the name of the Father, and of the Son, and of the Holy Spirit. Amen.'
+            },
+            'apostles-creed': {
+                title: 'Apostles\' Creed',
+                text: 'I believe in God, the Father almighty, Creator of heaven and earth, and in Jesus Christ, his only Son, our Lord, who was conceived by the Holy Spirit, born of the Virgin Mary, suffered under Pontius Pilate, was crucified, died and was buried; he descended into hell; on the third day he rose again from the dead; he ascended into heaven, and is seated at the right hand of God the Father almighty; from there he will come to judge the living and the dead. I believe in the Holy Spirit, the holy catholic Church, the communion of saints, the forgiveness of sins, the resurrection of the body, and life everlasting. Amen.'
+            },
+            'our-father': {
+                title: 'Our Father',
+                text: 'Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. Amen.'
+            },
+            'hail-mary': {
+                title: 'Hail Mary',
+                text: 'Hail Mary, full of grace, the Lord is with thee; blessed art thou amongst women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of death. Amen.'
+            },
+            'glory-be': {
+                title: 'Glory Be',
+                text: 'Glory to the Father, and to the Son, and to the Holy Spirit, as it was in the beginning, and now, and ever shall be, world without end. Amen.'
+            },
+            'fatima': {
+                title: 'Fatima Prayer',
+                text: 'O my Jesus, forgive us our sins, save us from the fires of hell, lead all souls to Heaven, especially those most in need of Thy mercy. Amen.'
+            },
+            'hail-holy-queen': {
+                title: 'Hail Holy Queen',
+                text: 'Hail, holy Queen, Mother of Mercy, our life, our sweetness and our hope. To you do we cry, poor banished children of Eve; to you do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, your eyes of mercy toward us; and after this our exile, show us the blessed fruit of your womb, Jesus. O clement, O loving, O sweet Virgin Mary. ℣ Pray for us, O holy Mother of God, ℟ that we may be made worthy of the promises of Christ.'
+            },
+            'concluding': {
+                title: 'Concluding Prayer',
+                text: 'O God, Whose only-begotten Son, by His life, death and resurrection, hath purchased for us the rewards of eternal salvation; grant, we beseech Thee, that as we have meditated on these mysteries of the Most Holy Rosary of the Blessed Virgin Mary, we may imitate what they contain and obtain what they promise, through the same Christ our Lord. Amen.'
+            }
+        };
+
+        const mysteries = {
+            joyful: [
+                'The Annunciation',
+                'The Visitation of Our Lady to Saint Elizabeth',
+                'The Birth of Our Lord',
+                'The Presentation of Our Lord at the Temple',
+                'The Finding of Our Lord at the Temple'
+            ],
+            sorrowful: [
+                'The Agony in the Garden',
+                'The Flagellation',
+                'The Crowning of Thorns',
+                'The Carrying of the Cross',
+                'The Crucifixion'
+            ],
+            glorious: [
+                'The Resurrection',
+                'The Ascension of Our Lord into Heaven',
+                'The Descent of the Holy Spirit',
+                'The Assumption of Our Lady',
+                'The Crowning of Our Lady as Queen of Heaven'
+            ],
+            luminous: [
+                'The Baptism of Our Lord',
+                'The Wedding at Cana',
+                'The Sermon on the Mount',
+                'The Transfiguration',
+                'The Last Supper'
+            ]
+        };
+
+        const mysterySchedule = {
+            0: 'joyful',    // Sunday
+            1: 'joyful',    // Monday
+            2: 'sorrowful', // Tuesday
+            3: 'glorious',  // Wednesday
+            4: 'luminous',  // Thursday
+            5: 'sorrowful', // Friday
+            6: 'joyful'     // Saturday
+        };
+
+        let currentBeadIndex = -1;
+        let allBeads = [];
+        let currentMystery = 'joyful';
+        let autoModeActive = false;
+
+        function initializeRosary() {
+            // Set today's mystery
+            const today = new Date().getDay();
+            currentMystery = mysterySchedule[today];
+            
+            // Update UI
+            updateTodaysMysteries();
+            setActiveMystery(currentMystery);
+            
+            // Get all beads in order
+            const beadElements = document.querySelectorAll('[data-order]');
+            allBeads = Array.from(beadElements).sort((a, b) => {
+                return parseInt(a.dataset.order) - parseInt(b.dataset.order);
+            });
+
+            // Add click handlers
+            allBeads.forEach((bead, index) => {
+                bead.addEventListener('click', () => clickBead(index));
+            });
+
+            // Add mystery title click handlers
+            document.querySelectorAll('.decade-title').forEach(title => {
+                title.addEventListener('click', () => showMystery(title.dataset.mystery));
+            });
+
+            // Add mystery selector handlers
+            document.querySelectorAll('.mystery-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentMystery = btn.dataset.mystery;
+                    setActiveMystery(currentMystery);
+                    updateMysteryTitles();
+                });
+            });
+
+            // Modal handlers
+            const modal = document.getElementById('prayerModal');
+            const closeBtn = document.querySelector('.close');
+            closeBtn.onclick = () => modal.style.display = 'none';
+            window.onclick = (event) => {
+                if (event.target === modal) modal.style.display = 'none';
+            };
+
+            updateCurrentBead();
+            updateMysteryTitles();
+        }
+
+        function updateTodaysMysteries() {
+            const mysteryNames = {
+                joyful: 'Joyful (Mon, Sat, Sun)',
+                sorrowful: 'Sorrowful (Tue, Fri)',
+                glorious: 'Glorious (Wed, Sun)',
+                luminous: 'Luminous (Thu)'
+            };
+            document.getElementById('todays-mysteries').textContent = mysteryNames[currentMystery];
+        }
+
+        function setActiveMystery(mystery) {
+            document.querySelectorAll('.mystery-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mystery === mystery);
+            });
+        }
+
+        function updateMysteryTitles() {
+            document.querySelectorAll('.decade-title').forEach((title, index) => {
+                const mysteryNum = parseInt(title.dataset.mystery) - 1;
+                title.textContent = `${mysteryNum + 1}. ${mysteries[currentMystery][mysteryNum]}`;
+            });
+        }
+
+        function clickBead(index) {
+            currentBeadIndex = index;
+            updateBeadStates();
+            showPrayer();
+            updateProgress();
+        }
+
+        function updateBeadStates() {
+            allBeads.forEach((bead, index) => {
+                bead.classList.remove('completed', 'active');
+                if (index < currentBeadIndex) {
+                    bead.classList.add('completed');
+                } else if (index === currentBeadIndex) {
+                    bead.classList.add('active');
+                }
+            });
+        }
+
+        function showPrayer() {
+            if (currentBeadIndex === -1) return;
+            
+            const currentBead = allBeads[currentBeadIndex];
+            const prayerType = currentBead.dataset.prayer;
+            const prayer = prayers[prayerType];
+            
+            if (prayer) {
+                document.getElementById('modalTitle').textContent = prayer.title;
+                document.getElementById('modalText').textContent = prayer.text;
+                document.getElementById('prayerModal').style.display = 'block';
+            }
+        }
+
+        function showMystery(mysteryNum) {
+            const mysteryIndex = parseInt(mysteryNum) - 1;
+            const mysteryText = mysteries[currentMystery][mysteryIndex];
+            
+            document.getElementById('modalTitle').textContent = `${mysteryNum}${getOrdinalSuffix(mysteryNum)} Mystery`;
+            document.getElementById('modalText').textContent = mysteryText;
+            document.getElementById('prayerModal').style.display = 'block';
+        }
+
+        function getOrdinalSuffix(num) {
+            const suffixes = ['st', 'nd', 'rd', 'th', 'th'];
+            return suffixes[parseInt(num) - 1] || 'th';
+        }
+
+        function updateProgress() {
+            const totalBeads = allBeads.length;
+            if (currentBeadIndex === -1) {
+                document.getElementById('progress-text').textContent = 'Click the Cross to begin';
+            } else {
+                const currentBead = allBeads[currentBeadIndex];
+                const prayerType = currentBead.dataset.prayer;
+                const prayerName = prayers[prayerType]?.title || 'Prayer';
+                document.getElementById('progress-text').textContent = `${prayerName} (${currentBeadIndex + 1}/${totalBeads})`;
+            }
+        }
+
+        function updateCurrentBead() {
+            updateBeadStates();
+            updateProgress();
+        }
+
+        function nextBead() {
+            if (currentBeadIndex < allBeads.length - 1) {
+                currentBeadIndex++;
+                updateCurrentBead();
+                if (!autoModeActive) showPrayer();
+            }
+        }
+
+        function previousBead() {
+            if (currentBeadIndex > -1) {
+                currentBeadIndex--;
+                updateCurrentBead();
+            }
+        }
+
+        function resetRosary() {
+            currentBeadIndex = -1;
+            autoModeActive = false;
+            updateCurrentBead();
+        }
+
+        function autoMode() {
+            autoModeActive = !autoModeActive;
+            if (autoModeActive) {
+                if (currentBeadIndex === -1) currentBeadIndex = 0;
+                autoAdvance();
+            }
+        }
+
+        function autoAdvance() {
+            if (autoModeActive && currentBeadIndex < allBeads.length - 1) {
+                nextBead();
+                setTimeout(autoAdvance, 4000); // 4 seconds per bead
+            } else {
+                autoModeActive = false;
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeRosary);
+    </script>
+</body>
+</html>
